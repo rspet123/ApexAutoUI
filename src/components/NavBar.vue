@@ -4,6 +4,7 @@
     <v-btn text :to="{ path: '/' }" router>Home</v-btn>
     <v-btn text :to="{ path: '/maps' }" router>Maps</v-btn>
     <v-btn text :to="{ path: '/analysis' }" router>Analysis</v-btn>
+    <v-btn text :to="{ path: '/ring' }" router>Ring</v-btn>
     <v-btn text @click="settings = true">
       <v-icon>mdi-cog</v-icon>
     </v-btn>

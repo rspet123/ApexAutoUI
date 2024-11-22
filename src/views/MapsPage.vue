@@ -176,8 +176,10 @@ export default {
       let map_name = map.metadata.map_name.replace(/\s/g, "_");
       this.fetchMapData(map_name);
     },
-    watch (activeTab) {
-      console.log("TAB CHANGED", activeTab);
+    watch: {
+      activeTab(newVal) {
+        console.log("TAB CHANGED", newVal);
+      }
     },
     saveMapThresholds(map, harvester_threshold, console_threshold) {
       let map_name = map.replace(/\s/g, "_");

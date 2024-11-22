@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomePage from "@/views/HomePage.vue";
 import MapsPage from "@/views/MapsPage.vue";
 import AnalysisPage from "@/views/AnalysisPage.vue";
+import RingPage from "@/views/RingPage.vue";
 
 // Define your routes
 const routes = [
@@ -19,6 +20,11 @@ const routes = [
     path: "/analysis",
     name: "Analysis",
     component: AnalysisPage,
+  },
+  {
+    path: "/ring",
+    name: "Ring",
+    component: RingPage,
   },
   {
     path: "/:pathMatch(.*)*",
