@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { Canvas, Circle } from "fabric";
+import { Canvas, Circle, Text } from "fabric";
 import { map_data, mapCordX, mapCordY, mapCordR } from "../mapdata.js";
 
 export default {
@@ -25,7 +25,9 @@ export default {
   },
   computed: {
     mapImage() {
-      let imgurl = this.mapObject ? "https://overstat.gg/maps/" + this.mapObject.image + ".webp" : "";
+      let imgurl = this.mapObject
+        ? "https://overstat.gg/maps/" + this.mapObject.image + ".webp"
+        : "";
       return imgurl;
     },
   },
@@ -52,17 +54,14 @@ export default {
         selection: false,
       });
 
-      // this.addRing(10, 212, 0, 603.3);
-      // this.addRing(292, 212, 0, 295.1);
-      // this.addRing(382, 212, 0, 182.1);
-      // this.addRing(482, 212, 0, 91.2);
-      // this.addRing(552, 232, 0, 45.5);
+
     },
     resizeCanvas() {
       console.log("Resizing canvas");
     },
-    addRing(x, y, z, rad, color = "red") {
-      // console.log("Adding ring at", x, y, z, rad);
+    addRing(x, y, z, rad, color = "red", title = "X") {
+      const titleText = String(title);
+
       const circle = new Circle({
         radius: rad,
         fill: "transparent",
@@ -74,7 +73,34 @@ export default {
         stroke: color,
         strokeWidth: 2,
       });
+
+      const hText = new Text(titleText, {
+        left: circle.left,
+        top: circle.top - 30,
+        fontSize: 40,
+        fill: "white",
+        visible: false,
+        fontFamily: "Arial",
+      });
+
       this.canvas.add(circle);
+      this.canvas.add(hText);
+
+      // Add mouseover event to show text
+      circle.on("mouseover", () => {
+        hText.set({
+          visible: true,
+        });
+        this.canvas.renderAll();
+      });
+
+      // Add mouseout event to hide text
+      circle.on("mouseout", () => {
+        hText.set({
+          visible: false,
+        });
+        this.canvas.renderAll();
+      });
     },
   },
   watch: {
@@ -82,24 +108,11 @@ export default {
       handler(newRings) {
         this.canvas.clear();
         newRings.forEach((ring) => {
-          
-          
           let NewX = mapCordX(ring.x, "storm_point");
           let NewY = mapCordY(ring.y, "storm_point");
           let newR = mapCordR(ring.size, "storm_point");
           let color = "#" + ((ring.game_id * 9301 + 49297) % 16777215).toString(16);
-          // console.log("old x,y,r", ring.x, ring.y, ring.size);
-          // console.log("ring x,y,r", NewX, NewY, newR);
-          //if(ring.game_id == 56583){
-          //  console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-          //  console.log("Ring", ring);
-          //  color = "red";
-          //  
-          //}
-          // Hash gameId to color
-          this.addRing(NewX, NewY, 0, newR, color);
-          
-          
+          this.addRing(NewX, NewY, 0, newR, color, ring.game_id + " - #" + ring.zone_number);
         });
       },
       deep: true,

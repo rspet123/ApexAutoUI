@@ -45,46 +45,49 @@
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col>
-        <v-card-title>Games</v-card-title>
-        <v-data-table
-          :items="matchGamesData"
-          :headers="gamesTableHeaders"
-          :items-per-page="5"
-          class="elevation-1"
-        ></v-data-table>
-      </v-col>
     </v-row>
     <v-row justify="center" class="mt-4">
-      <v-col cols="12">
+      <v-col cols="8">
         <v-card>
           <v-card-title>Map</v-card-title>
-          <!-- Dropdown to select map-->
-           <v-row>
-           <v-select
-             v-model="selectedMap"
-             :items="mapData"
-             :return-object="true"
-             item-text="name"
-             item-title="name"
-             label="Select Map"
-             placeholder="No maps available"
-             @change="onMapSelect()"
-           ></v-select>
-           <v-select
+          <v-card-text>
+            <RingMap :mapObject="selectedMap" :rings="filteredRings"></RingMap>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      <v-col cols="4">
+        <v-card>
+          <v-card-title>Filters</v-card-title>
+          <v-card-text>
+            <v-select
+              v-model="selectedMap"
+              :items="mapData"
+              :return-object="true"
+              item-text="name"
+              item-title="name"
+              label="Select Map"
+              placeholder="No maps available"
+              @change="onMapSelect"
+              class="mb-4"
+            ></v-select>
+            <v-select
               v-model="filters.ringNumber"
               :items="ringNumberOptions"
               label="Select Ring Number"
-              placeholder="No rings available"
+              placeholder="All Rings"
+              class="mb-4"
             ></v-select>
+            <v-select
+              v-model="filters.gameId"
+              :items="gameIdOptions"
+              label="Game"
+              class="mb-4"
+              multiple
+              chips
+              placeholder="All Games"
+            >
+            </v-select>
             <v-btn @click="resetFilters">Reset Filters</v-btn>
-           </v-row>
-          <v-card-text>
-            <RingMap
-              mapImage="https://overstat.gg/maps/mp_rr_tropic_island_mu2.webp"
-              :mapObject="selectedMap"
-              :rings="filteredRings"
-            ></RingMap>
           </v-card-text>
         </v-card>
       </v-col>
@@ -123,25 +126,26 @@ export default {
         { text: "Status", value: "status" },
       ],
       ringData: [],
-      ringNumberOptions: [0,1,2,3,4],
+      ringNumberOptions: [0, 1, 2, 3, 4],
+      gameIdOptions: [],
       filteredRings: [],
       filters: {
-        ringNumber: -1,
-  
-      }
+        ringNumber: null,
+        gameId: [],
+      },
     };
   },
-  watch : {
-    selectedMap: function() {
+  watch: {
+    selectedMap: function () {
       this.ringData = [];
       this.getMapRings();
     },
     filters: {
-      handler: function() {
+      handler: function () {
         this.filterRings();
       },
-      deep: true
-    }
+      deep: true,
+    },
   },
   methods: {
     getMatchData() {
@@ -153,7 +157,6 @@ export default {
       api
         .get("/match_data/" + this.matchId)
         .then((response) => {
-          console.log(response.data);
           this.matchData = response.data.match_info.match;
           this.matchGamesData = response.data.match_info.games;
           this.loading = false;
@@ -169,8 +172,12 @@ export default {
       api
         .get("/rings/" + mapId)
         .then((response) => {
-          console.log(response.data);
           this.ringData = response.data;
+          let gameIds = new Set();
+          this.ringData.forEach((ring) => {
+            gameIds.add(ring.game_id);
+          });
+          this.gameIdOptions = Array.from(gameIds);
           this.filterRings();
         })
         .catch((error) => {
@@ -185,20 +192,31 @@ export default {
     },
     filterRings() {
       // Filter rings based on ring number
-      let filteredRings = this.ringData.filter(ring => {
-        console.log(ring.zone_number, this.filters.ringNumber);
-        return this.filters.ringNumber == -1 || ring.zone_number == this.filters.ringNumber;
+      let filteredRings = this.ringData.filter((ring) => {
+        let returnVal = true;
+        if (this.filters.ringNumber !== null) {
+          returnVal = ring.zone_number === this.filters.ringNumber;
+          if (!returnVal) {
+            return false;
+          }
+        }
+        if (this.filters.gameId.length > 0) {
+          returnVal = this.filters.gameId.includes(ring.game_id);
+          if (!returnVal) {
+            return false;
+          }
+        }
+        return returnVal;
       });
-
-      // Do More Filtering Here
 
       this.filteredRings = filteredRings;
     },
     resetFilters() {
       this.filters = {
-        ringNumber: -1,
+        ringNumber: null,
+        gameId: [],
       };
-    }
+    },
   },
 };
 </script>
